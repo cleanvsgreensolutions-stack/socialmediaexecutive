@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pavan Kumar Baswani — Developer & Builder</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --black: #080808;
+    --white: #f0ede8;
+    --accent: #7eb5c8;
+    --dim: rgba(240,237,232,0.4);
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Space Grotesk', sans-serif;
+    overflow: hidden;
+    cursor: none;
+  }
+
+  #cursor {
+    position: fixed;
+    width: 10px; height: 10px;
+    background: var(--white);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s, width 0.3s, height 0.3s, background 0.3s;
+    mix-blend-mode: difference;
+  }
+  #cursor-ring {
+    position: fixed;
+    width: 40px; height: 40px;
+    border: 1px solid rgba(240,237,232,0.6);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.12s ease-out, width 0.3s, height 0.3s, opacity 0.3s;
+  }
+  body.hovering #cursor { width: 60px; height: 60px; }
+  body.hovering #cursor-ring { opacity: 0; }
+
+  #canvas { position: fixed; inset: 0; display: block; }
+
+  header {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 28px 40px;
+    z-index: 100;
+    pointer-events: none;
+  }
+  .logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 0.15em;
+    pointer-events: all;
+  }
+
+  .waveform {
+    display: flex; align-items: center; gap: 3px;
+    height: 20px;
+  }
+  .waveform span {
+    display: block;
+    width: 2px;
+    background: var(--dim);
+    border-radius: 1px;
+    animation: wave 1.2s ease-in-out infinite;
+  }
+  @keyframes wave {
+    0%,100% { height: 4px; }
+    50% { height: 16px; }
+  }
+  .waveform span:nth-child(1)  { animation-delay: 0s; }
+  .waveform span:nth-child(2)  { animation-delay: 0.1s; }
+  .waveform span:nth-child(3)  { animation-delay: 0.2s; }
+  .waveform span:nth-child(4)  { animation-delay: 0.3s; }
+  .waveform span:nth-child(5)  { animation-delay: 0.4s; }
+  .waveform span:nth-child(6)  { animation-delay: 0.5s; }
+  .waveform span:nth-child(7)  { animation-delay: 0.4s; }
+  .waveform span:nth-child(8)  { animation-delay: 0.3s; }
+  .waveform span:nth-child(9)  { animation-delay: 0.2s; }
+  .waveform span:nth-child(10) { animation-delay: 0.1s; }
+  .waveform span:nth-child(11) { animation-delay: 0s; }
+  .waveform span:nth-child(12) { animation-delay: 0.15s; }
+  .waveform span:nth-child(13) { animation-delay: 0.25s; }
+  .waveform span:nth-child(14) { animation-delay: 0.35s; }
+  .waveform span:nth-child(15) { animation-delay: 0.45s; }
+
+  nav { display: flex; gap: 32px; pointer-events: all; }
+  nav a {
+    font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--dim);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+  nav a:hover { color: var(--white); }
+
+  footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: flex-end;
+    padding: 24px 40px;
+    z-index: 100;
+    pointer-events: none;
+  }
+  .footer-left p {
+    font-size: 9px; letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dim);
+    line-height: 1.8;
+  }
+  .footer-right {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
+  }
+  .footer-right a {
+    font-size: 9px; letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dim);
+    text-decoration: none;
+    transition: color 0.3s;
+    pointer-events: all;
+  }
+  .footer-right a:hover { color: var(--white); }
+
+  #slide-info {
+    position: fixed;
+    bottom: 80px; left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    z-index: 100;
+    pointer-events: none;
+    transition: opacity 0.5s;
+  }
+  #slide-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  #slide-sub {
+    font-size: 9px; letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--dim);
+    margin-top: 4px;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+
+  #scroll-hint {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px; letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--dim);
+    z-index: 100;
+    pointer-events: none;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+
+  #panel-count {
+    position: fixed; top: 50%; right: 40px;
+    transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 6px;
+    z-index: 100;
+  }
+  .pip {
+    width: 2px; height: 14px;
+    background: rgba(240,237,232,0.2);
+    border-radius: 1px;
+    transition: background 0.3s, height 0.3s;
+    cursor: pointer;
+  }
+  .pip.active {
+    background: var(--white);
+    height: 24px;
+  }
+
+  #about-modal {
+    position: fixed; inset: 0;
+    background: rgba(8,8,8,0.97);
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.5s;
+  }
+  #about-modal.open { opacity: 1; pointer-events: all; }
+  .modal-inner { max-width: 580px; padding: 40px; }
+  .modal-inner h2 {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: 32px;
+  }
+  .modal-inner h1 {
+    font-size: 52px; font-weight: 700;
+    line-height: 1.0;
+    margin-bottom: 24px;
+  }
+  .modal-inner p {
+    font-size: 14px; line-height: 1.8;
+    color: var(--dim);
+    margin-bottom: 16px;
+  }
+  .skills {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-top: 28px;
+  }
+  .skill-tag {
+    font-size: 9px; letter-spacing: 0.18em;
+    text-transform: uppercase;
+    border: 1px solid rgba(240,237,232,0.2);
+    padding: 6px 14px;
+    color: var(--dim);
+  }
+  .modal-close {
+    position: absolute; top: 40px; right: 40px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; letter-spacing: 0.18em;
+    cursor: pointer; color: var(--dim);
+    background: none; border: none;
+    text-transform: uppercase;
+    transition: color 0.3s;
+  }
+  .modal-close:hover { color: var(--white); }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<canvas id="canvas"></canvas>
+
+<header>
+  <div class="logo">PKB.DEV</div>
+  <div class="waveform">
+    <span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+  <nav>
+    <a href="#" id="about-btn">About</a>
+    <a href="#">Projects</a>
+    <a href="#">Contact</a>
+  </nav>
+</header>
+
+<div id="panel-count"></div>
+
+<div id="slide-info">
+  <div id="slide-title"></div>
+  <div id="slide-sub"></div>
+</div>
+
+<div id="scroll-hint">Drag or Scroll to Explore</div>
+
+<footer>
+  <div class="footer-left">
+    <p>Full-Stack Developer & Builder</p>
+    <p>Bhimavaram, Andhra Pradesh — Open to Projects 2026</p>
+  </div>
+  <div class="footer-right">
+    <a href="#">GitHub</a>
+    <a href="#">LinkedIn</a>
+    <a href="#">Instagram</a>
+    <a href="#">Email</a>
+  </div>
+</footer>
+
+<div id="about-modal">
+  <button class="modal-close" id="modal-close-btn">✕ Close</button>
+  <div class="modal-inner">
+    <h2>About</h2>
+    <h1>Pavan<br>Kumar B.</h1>
+    <p>Full-stack developer and multi-domain builder based in Andhra Pradesh. MCA + B.Sc. CS background. I ship real products — from AI-powered web apps to Telugu news portals to eco-brand digital presences.</p>
+    <p>Currently pursuing LL.B. alongside building SocialSync, BPKNEWS, Clean vs Green Solutions, and client web projects across the Vijayawada region.</p>
+    <div class="skills">
+      <span class="skill-tag">HTML / CSS / JS</span>
+      <span class="skill-tag">Python</span>
+      <span class="skill-tag">Claude API</span>
+      <span class="skill-tag">Blogger CMS</span>
+      <span class="skill-tag">SEO</span>
+      <span class="skill-tag">REST APIs</span>
+      <span class="skill-tag">GitHub Pages</span>
+      <span class="skill-tag">Content Strategy</span>
+      <span class="skill-tag">OAuth</span>
+      <span class="skill-tag">Legal Tech</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let W = canvas.width = window.innerWidth;
+let H = canvas.height = window.innerHeight;
+
+const panelData = [
+  {
+    title: 'SOCIALSYNC',
+    sub: 'AI-Powered Multi-Platform Posting Tool',
+    color1: '#070a12',
+    color2: '#0d1a30',
+    accent: '#7eb5c8',
+    stat: '7',
+    label: 'Platforms Integrated'
+  },
+  {
+    title: 'BPKNEWS',
+    sub: 'Telugu Regional News Portal — Vijayawada',
+    color1: '#0a0807',
+    color2: '#1e100a',
+    accent: '#c8956a',
+    stat: 'Live',
+    label: 'Broadsheet News Site'
+  },
+  {
+    title: 'ATS BUILDER',
+    sub: 'Claude API-Powered Resume Builder',
+    color1: '#080f08',
+    color2: '#0e1f12',
+    accent: '#72c88a',
+    stat: 'AI',
+    label: 'Resume Optimiser'
+  },
+  {
+    title: 'CLEAN VS GREEN',
+    sub: 'Eco-Products Brand — Digital Presence',
+    color1: '#080f0a',
+    color2: '#102010',
+    accent: '#60c870',
+    stat: 'SEO',
+    label: 'Blogspot Optimisation'
+  },
+  {
+    title: 'TEMPLE HUB',
+    sub: 'Smart Temple Info & Pooja Scheduler',
+    color1: '#0f0a05',
+    color2: '#241404',
+    accent: '#d4a855',
+    stat: '∞',
+    label: 'Festival Countdowns'
+  },
+  {
+    title: 'PAVAN LAW',
+    sub: 'Pavan Law Chambers — Legal Web Presence',
+    color1: '#0a070f',
+    color2: '#140e1e',
+    accent: '#9c80c8',
+    stat: 'LL.B',
+    label: 'Legal + Tech Crossover'
+  },
+  {
+    title: 'BJP LANDING',
+    sub: 'Political Blogger XML Page — Andhra Pradesh',
+    color1: '#100808',
+    color2: '#200f0a',
+    accent: '#c87850',
+    stat: 'XML',
+    label: 'Blogger XML Engineer'
+  },
+  {
+    title: 'IT RECRUITER',
+    sub: 'Software Careers Instagram Brand',
+    color1: '#07090f',
+    color2: '#0d1220',
+    accent: '#6a90d4',
+    stat: '30',
+    label: 'Day Content Calendar'
+  },
+  {
+    title: 'FIN ANALYSIS',
+    sub: 'Educational Institution 15-Year Fee Model',
+    color1: '#080a08',
+    color2: '#101a10',
+    accent: '#80c870',
+    stat: '15yr',
+    label: 'Campus Finance PPTX'
+  },
+];
+
+let targetAngle = 0;
+let currentAngle = 0;
+let mouseX = 0, mouseY = 0;
+let isDragging = false, dragStartX = 0, dragStartAngle = 0;
+let hoveredPanel = -1;
+
+const N = panelData.length;
+const RADIUS = Math.min(W, H) * 0.45;
+const PANEL_W = 90;
+const PANEL_H = 200;
+
+function drawPanelContent(d, w, h, hover) {
+  const oc = document.createElement('canvas');
+  oc.width = w * 2; oc.height = h * 2;
+  const c = oc.getContext('2d');
+  const sw = w * 2, sh = h * 2;
+
+  const bg = c.createLinearGradient(0, 0, sw * 0.6, sh);
+  bg.addColorStop(0, d.color1);
+  bg.addColorStop(1, d.color2);
+  c.fillStyle = bg;
+  c.fillRect(0, 0, sw, sh);
+
+  c.save();
+  c.globalAlpha = 0.12;
+  c.strokeStyle = d.accent;
+  c.lineWidth = 1;
+  for (let i = 0; i < 8; i++) {
+    c.beginPath();
+    c.arc(sw * 0.5, sh * 0.4, 20 + i * 22, 0, Math.PI * 2);
+    c.stroke();
+  }
+  c.restore();
+
+  c.save();
+  c.globalAlpha = 0.15;
+  c.strokeStyle = d.accent;
+  c.lineWidth = 0.8;
+  for (let i = -2; i < 6; i++) {
+    c.beginPath();
+    c.moveTo(i * sw * 0.25, 0);
+    c.lineTo(i * sw * 0.25 + sh * 0.5, sh);
+    c.stroke();
+  }
+  c.restore();
+
+  c.save();
+  c.globalAlpha = 0.6;
+  const cx = sw * 0.5, cy = sh * 0.38;
+  const gr = c.createRadialGradient(cx, cy, 0, cx, cy, 60);
+  gr.addColorStop(0, d.accent);
+  gr.addColorStop(1, 'transparent');
+  c.fillStyle = gr;
+  c.beginPath();
+  c.arc(cx, cy, 60, 0, Math.PI * 2);
+  c.fill();
+  c.restore();
+
+  c.save();
+  c.globalAlpha = 0.5;
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    const r = 40 + Math.sin(i * 1.3) * 15;
+    const px = cx + Math.cos(angle) * r;
+    const py = cy + Math.sin(angle) * r;
+    c.fillStyle = d.accent;
+    c.beginPath();
+    c.arc(px, py, 2, 0, Math.PI * 2);
+    c.fill();
+  }
+  c.restore();
+
+  c.save();
+  c.fillStyle = '#f0ede8';
+  c.font = `700 ${sw * 0.14}px Space Grotesk, sans-serif`;
+  c.textAlign = 'center';
+  c.globalAlpha = hover ? 1 : 0.9;
+  c.fillText(d.stat, sw * 0.5, sh * 0.7);
+  c.restore();
+
+  c.save();
+  c.fillStyle = d.accent;
+  c.font = `400 ${sw * 0.055}px Space Grotesk, sans-serif`;
+  c.textAlign = 'center';
+  c.globalAlpha = 0.8;
+  const words = d.label.split(' ');
+  let line = '', lines = [], maxW = sw * 0.85;
+  for (let w2 of words) {
+    const test = line + w2 + ' ';
+    if (c.measureText(test).width > maxW && line) { lines.push(line.trim()); line = w2 + ' '; }
+    else line = test;
+  }
+  lines.push(line.trim());
+  lines.forEach((l, i) => c.fillText(l, sw * 0.5, sh * 0.78 + i * sw * 0.07));
+  c.restore();
+
+  c.save();
+  c.fillStyle = d.accent;
+  c.globalAlpha = hover ? 0.9 : 0.4;
+  c.fillRect(sw * 0.2, sh - 12, sw * 0.6, 3);
+  c.restore();
+
+  c.save();
+  c.fillStyle = d.accent;
+  c.globalAlpha = 0.3;
+  c.fillRect(sw * 0.35, 10, sw * 0.3, 1);
+  c.restore();
+
+  if (hover) {
+    c.save();
+    c.strokeStyle = d.accent;
+    c.lineWidth = 3;
+    c.globalAlpha = 0.5;
+    c.strokeRect(6, 6, sw - 12, sh - 12);
+    c.restore();
+  }
+
+  return oc;
+}
+
+const panelImages = panelData.map(d => drawPanelContent(d, PANEL_W, PANEL_H, false));
+const panelImagesHover = panelData.map(d => drawPanelContent(d, PANEL_W, PANEL_H, true));
+
+const pipContainer = document.getElementById('panel-count');
+panelData.forEach((_, i) => {
+  const pip = document.createElement('div');
+  pip.className = 'pip';
+  pip.addEventListener('click', () => { targetAngle = -(i / N) * Math.PI * 2; });
+  pipContainer.appendChild(pip);
+});
+
+function updatePips() {
+  const pips = pipContainer.children;
+  const idx = Math.round(((-currentAngle / (Math.PI * 2)) * N + N * 100)) % N;
+  for (let i = 0; i < pips.length; i++) {
+    pips[i].classList.toggle('active', i === idx);
+  }
+}
+
+const slideTitle = document.getElementById('slide-title');
+const slideSub = document.getElementById('slide-sub');
+const scrollHint = document.getElementById('scroll-hint');
+
+let lastHovered = -1;
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  currentAngle += (targetAngle - currentAngle) * 0.06;
+  const mx = (mouseX / W - 0.5) * 0.08;
+  const my = (mouseY / H - 0.5) * 0.04;
+
+  const cx = W * 0.5 + mx * 80;
+  const cy = H * 0.5 + my * 60;
+
+  const panels = panelData.map((d, i) => {
+    const baseAngle = (i / N) * Math.PI * 2 + currentAngle + mx;
+    const x = Math.sin(baseAngle) * RADIUS;
+    const z = Math.cos(baseAngle) * RADIUS;
+    return { i, d, baseAngle, x, z };
+  });
+  panels.sort((a, b) => a.z - b.z);
+
+  hoveredPanel = -1;
+
+  panels.forEach(({ i, d, baseAngle, x, z }) => {
+    const scale = (z + RADIUS) / (RADIUS * 2);
+    const drawScale = 0.35 + scale * 0.9;
+    const alpha = 0.25 + scale * 0.75;
+
+    const pw = PANEL_W * drawScale;
+    const ph = PANEL_H * drawScale;
+    const px = cx + x * 0.7 - pw / 2;
+    const py = cy - ph / 2 + my * 30 * (1 - scale);
+
+    const skewFactor = Math.sin(baseAngle) * 0.35;
+
+    ctx.save();
+    ctx.translate(px + pw / 2, py + ph / 2);
+    ctx.transform(1, 0, skewFactor, 1, 0, 0);
+    ctx.globalAlpha = alpha;
+    ctx.shadowColor = d.accent + '55';
+    ctx.shadowBlur = 20 * scale;
+
+    ctx.drawImage(panelImages[i], -pw / 2, -ph / 2, pw, ph);
+
+    const sx = cx + x * 0.7;
+    const sy = cy + my * 30 * (1 - scale);
+    const dist = Math.hypot(mouseX - sx, mouseY - sy);
+    if (dist < pw * 0.8 && z > 0) {
+      hoveredPanel = i;
+      ctx.drawImage(panelImagesHover[i], -pw / 2, -ph / 2, pw, ph);
+      document.body.classList.add('hovering');
+    }
+
+    ctx.restore();
+  });
+
+  if (hoveredPanel === -1) document.body.classList.remove('hovering');
+
+  if (hoveredPanel !== -1 && hoveredPanel !== lastHovered) {
+    lastHovered = hoveredPanel;
+    const d = panelData[hoveredPanel];
+    slideTitle.textContent = d.title;
+    slideSub.textContent = d.sub;
+    slideTitle.style.opacity = '1';
+    slideSub.style.opacity = '1';
+  } else if (hoveredPanel === -1) {
+    lastHovered = -1;
+    slideTitle.style.opacity = '0';
+    slideSub.style.opacity = '0';
+  }
+
+  updatePips();
+
+  if (!isDragging) {
+    targetAngle -= 0.002;
+  }
+
+  requestAnimationFrame(draw);
+}
+
+window.addEventListener('mousemove', e => {
+  mouseX = e.clientX; mouseY = e.clientY;
+  document.getElementById('cursor').style.left = mouseX + 'px';
+  document.getElementById('cursor').style.top = mouseY + 'px';
+  document.getElementById('cursor-ring').style.left = mouseX + 'px';
+  document.getElementById('cursor-ring').style.top = mouseY + 'px';
+  if (isDragging) {
+    const dx = e.clientX - dragStartX;
+    targetAngle = dragStartAngle + dx * 0.008;
+  }
+});
+
+canvas.addEventListener('mousedown', e => {
+  isDragging = true;
+  dragStartX = e.clientX;
+  dragStartAngle = targetAngle;
+  scrollHint.style.opacity = '0';
+});
+
+window.addEventListener('mouseup', () => { isDragging = false; });
+
+window.addEventListener('wheel', e => {
+  targetAngle -= e.deltaY * 0.003;
+  scrollHint.style.opacity = '0';
+});
+
+canvas.addEventListener('touchstart', e => {
+  isDragging = true;
+  dragStartX = e.touches[0].clientX;
+  dragStartAngle = targetAngle;
+}, { passive: true });
+
+canvas.addEventListener('touchmove', e => {
+  const dx = e.touches[0].clientX - dragStartX;
+  targetAngle = dragStartAngle + dx * 0.008;
+}, { passive: true });
+
+canvas.addEventListener('touchend', () => { isDragging = false; });
+
+window.addEventListener('resize', () => {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+});
+
+document.getElementById('about-btn').addEventListener('click', e => {
+  e.preventDefault();
+  document.getElementById('about-modal').classList.add('open');
+});
+document.getElementById('modal-close-btn').addEventListener('click', () => {
+  document.getElementById('about-modal').classList.remove('open');
+});
+document.getElementById('about-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
+
+draw();
+</script>
+</body>
+</html>
